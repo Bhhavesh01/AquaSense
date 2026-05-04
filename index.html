@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSense - Smart Water Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Authentication Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="fa-solid fa-droplet auth-logo"></i>
+                <h2>AquaSense</h2>
+                <p>Smart Water Management</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin">Login</button>
+                <button class="auth-tab" id="tabSignup">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <div class="form-error" id="loginError"></div>
+                <button type="submit" class="btn-primary w-100">Login</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="signupName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <div class="form-error" id="signupError"></div>
+                <button type="submit" class="btn-primary w-100">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-droplet"></i>
+                <h2>AquaSense</h2>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar"><i class="fa-solid fa-user"></i></div>
+                <span id="userNameDisplay">User</span>
+            </div>
+
+            <nav>
+                <a href="#" class="nav-item active" data-target="dashboard"><i class="fa-solid fa-chart-line"></i> <span>Dashboard</span></a>
+                <a href="#" class="nav-item" data-target="add-usage"><i class="fa-solid fa-plus-circle"></i> <span>Add Usage</span></a>
+                <a href="#" class="nav-item" data-target="analytics"><i class="fa-solid fa-chart-pie"></i> <span>Analytics</span></a>
+                <a href="#" class="nav-item" data-target="alerts"><i class="fa-solid fa-bell"></i> <span>Alerts</span> <span class="badge" id="alertBadge" style="display:none">!</span></a>
+                <a href="#" class="nav-item" data-target="suggestions"><i class="fa-solid fa-lightbulb"></i> <span>Suggestions</span></a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="cost-config">
+                    <label>Cost / Litre (₹)</label>
+                    <input type="number" id="costRate" step="0.01" value="0.05">
+                </div>
+                <button id="logoutBtn" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="header-actions">
+                    <span class="date-display" id="headerDate"></span>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <div class="view-section active" id="dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-tint"></i></div>
+                        <div class="stat-info">
+                            <h3>Today's Usage</h3>
+                            <p class="stat-value" id="todayUsage">0 L</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div class="stat-info">
+                            <h3>Today's Cost</h3>
+                            <p class="stat-value" id="todayCost">₹0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-crystal-ball"></i></div>
+                        <div class="stat-info">
+                            <h3>Predicted (Tomorrow)</h3>
+                            <p class="stat-value" id="predictedUsage">0 L</p>
+                        </div>
+                    </div>
+                    <div class="stat-card eco-card">
+                        <div class="stat-icon"><i class="fa-solid fa-leaf"></i></div>
+                        <div class="stat-info">
+                            <h3>Eco Score</h3>
+                            <p class="stat-value" id="ecoScore">Good</p>
+                            <div class="progress-bar"><div class="progress" id="ecoProgress"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-grid-2">
+                    <div class="card chart-card">
+                        <h3>Last 7 Days Usage</h3>
+                        <div class="chart-container">
+                            <canvas id="dashboardChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card summary-card">
+                        <h3>Recent Activity</h3>
+                        <div class="recent-activity-list" id="recentActivityList">
+                            <div class="empty-state">No data yet. Go to Add Usage!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Usage View -->
+            <div class="view-section" id="add-usage">
+                <div class="card form-card">
+                    <h2>Record Daily Usage</h2>
+                    <form id="usageForm">
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="bathing"><i class="fa-solid fa-shower text-blue"></i> Bathing (L)</label>
+                                <input type="number" id="bathing" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="washing"><i class="fa-solid fa-shirt text-blue"></i> Washing (L)</label>
+                                <input type="number" id="washing" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cooking"><i class="fa-solid fa-fire-burner text-blue"></i> Cooking (L)</label>
+                                <input type="number" id="cooking" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="drinking"><i class="fa-solid fa-glass-water text-blue"></i> Drinking (L)</label>
+                                <input type="number" id="drinking" min="0" value="0" required>
+                            </div>
+                        </div>
+                        <div class="calc-preview">
+                            Total Usage: <strong id="totalPreview">0</strong> Litres
+                        </div>
+                        <button type="submit" class="btn-primary">Save Data</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Analytics View -->
+            <div class="view-section" id="analytics">
+                <div class="card">
+                     <h2>Usage Analytics (Last 7 Days)</h2>
+                     <div class="chart-container large-chart">
+                         <canvas id="analyticsChart"></canvas>
+                     </div>
+                </div>
+                <div class="card mt-4">
+                     <h2>Category Breakdown</h2>
+                     <div class="chart-container medium-chart">
+                         <canvas id="breakdownChart"></canvas>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Alerts View -->
+            <div class="view-section" id="alerts">
+                <div class="card">
+                    <h2>System Alerts & Leak Detection</h2>
+                    <p class="text-muted mb-4">We monitor your usage patterns to detect possible leaks or wastage.</p>
+                    <div id="alertsList">
+                        <div class="empty-state">System looks good. No alerts!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions View -->
+            <div class="view-section" id="suggestions">
+                <div class="card">
+                    <h2>Personalized Suggestions</h2>
+                    <p class="text-muted mb-4">Based on your recent usage habits.</p>
+                    <div class="suggestions-grid" id="suggestionsGrid">
+                        <div class="empty-state">Add some usage data to get suggestions.</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Data saved successfully!</div>
+
+    <script src="script.js?v=2"></script>
+</body>
+</html>
